@@ -4,10 +4,12 @@ import Buttonvsatu from "/src/components/Molecules/Logindaftar/Buttonvsatu";
 import Lupapass from "/src/components/Molecules/Logindaftar/Lupapass";
 import Atau from "/src/components/Molecules/Logindaftar/Atau";
 import Buttongo from "/src/components/Molecules/Logindaftar/Buttonimg";
+import Logol from "/src/assets/image/logoGoogle.png";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Logol from "/src/assets/image/logoGoogle.png";
+import axios from "axios";
+import userStore from "/src/components/Store/UserStore";
 
 const Formlogin = () => {
   const navigate = useNavigate();
@@ -17,6 +19,8 @@ const Formlogin = () => {
     password: "",
   });
 
+  const setUser = userStore((state) => state.setUser);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setLoginData({
@@ -25,27 +29,36 @@ const Formlogin = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!loginData.email || !loginData.password) {
       alert("Email dan password harus diisi!");
       return;
     }
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const user = users.find((u) => u.email === loginData.email);
+    try {
+      const res = await axios.get("https://67f1488ac733555e24acb4bb.mockapi.io/users");
 
-    if (!user) {
-      alert("Email tidak ditemukan!");
-      return;
-    }
+      // cari user berdasarkan email
+      const user = res.data.find((u) => u.email === loginData.email);
 
-    if (user.password !== loginData.password) {
-      alert("Password salah!");
-      return;
-    }else{
-      localStorage.setItem("currentUser", JSON.stringify(user));
+      if (!user) {
+        alert("Email tidak ditemukan!");
+        return;
+      }
+
+      // cek password
+      if (user.password !== loginData.password) {
+        alert("Password salah!");
+        return;
+      }
+
+      setUser(user);
       alert("Login berhasil!");
       navigate("/beranda");
+
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan saat login");
     }
   };
   const klik = (path) => {
