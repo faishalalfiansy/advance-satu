@@ -11,6 +11,8 @@ import Logol from "/src/assets/image/logoGoogle.png";
 import Bendera from "/src/assets/image/logoIndonesia.png"
 import React from "react";
 import { useState } from "react";
+import axios from "axios";
+import userStore from "../Store/UserStore";
 
 const Formregister = () => {
   const navigate = useNavigate();
@@ -23,6 +25,7 @@ const Formregister = () => {
     repassword: "",
   });
 
+  const setUser = userStore((state) => state.setUser);
  
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,39 +35,51 @@ const Formregister = () => {
     })
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (dataUser.password !== dataUser.repassword) {
+    const { nama, email, telfon, password, repassword } = dataUser;
+
+    if (password !== repassword) {
       alert("Password tidak sama!");
       return;
-    }else if (dataUser.password.length < 6) {
+    }else if (password.length < 6) {
       alert("Password minimal 6 karakter!");
       return;
-    }else{
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-
-      const emailExists = users.some((user) => user.email === dataUser.email);
-       if (emailExists) {
-        alert("Email sudah digunakan!");
-       return;
-      }
-      users.push({
-        nama: dataUser.nama,
-        email: dataUser.email,
-        telfon: dataUser.telfon,
-        password: dataUser.password,
-      });
-      localStorage.setItem("users", JSON.stringify(users));
-      alert("Registrasi berhasil!");
-      setDataUser({
-        nama: "",
-        email: "",
-        telfon: "",
-        password: "",
-        repassword: "",
-      });
     }
+      try {
+        // Cek email terdaftar
+        const res = await axios.get("https://67f1488ac733555e24acb4bb.mockapi.io/users");
+        const emailExists = res.data.some((user) => user.email === email);
+        if (emailExists) {
+          alert("Email sudah digunakan!");
+          return;
+        }
+
+        //simpan ke mockapi
+        const response = await axios.post("https://67f1488ac733555e24acb4bb.mockapi.io/users", {
+          name: nama,
+          email,
+          phone: telfon,
+          password,
+        });
+
+        setUser(response.data);
+
+        alert("Registrasi berhasil!");
+
+        setDataUser({
+          nama: "",
+          email: "",
+          telfon: "",
+          password: "",
+          repassword: "",
+        });
+
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat registrasi");
+      }
   };
   
   const tologin = (path) => {
