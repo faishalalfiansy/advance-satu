@@ -38,7 +38,7 @@ const Formlogin = () => {
     try {
       const res = await axios.get("https://67f1488ac733555e24acb4bb.mockapi.io/users");
 
-      // cari user berdasarkan email
+      // cek email
       const user = res.data.find((u) => u.email === loginData.email);
 
       if (!user) {
